@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "906015471708",
+    "project_id": "jong-notification-local-adb77",
+    "storage_bucket": "jong-notification-local-adb77.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906015471708:android:631b4f6a968909b5ef8e99",
+        "android_client_info": {
+          "package_name": "com.example.notification_fcm_token"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWq64CE2NLmcSny5euy_hMUtNPXbZRkGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
