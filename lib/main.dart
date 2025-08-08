@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:notification_fcm_token/Service/notification_service.dart';
 import 'package:notification_fcm_token/firebase_options.dart';
 
@@ -21,112 +22,511 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Firebase Notification',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6750A4),
+          brightness: Brightness.light,
+        ),
+        fontFamily: 'Roboto',
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6750A4),
+          brightness: Brightness.dark,
+        ),
+        fontFamily: 'Roboto',
+      ),
+      themeMode: ThemeMode.system,
+      home: const NotificationHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class NotificationHomePage extends StatefulWidget {
+  const NotificationHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<NotificationHomePage> createState() => _NotificationHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _NotificationHomePageState extends State<NotificationHomePage>
+    with TickerProviderStateMixin {
+  int _notificationCount = 0;
+  String _fcmToken = 'loading...';
+  bool _isSubscribed = true;
+  late AnimationController _pulseController;
+  late AnimationController _slideController;
+  late Animation<double> _pulseAnimation;
+  late Animation<Offset> _slideAnimation;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  final List<NotificationItem> _recentNotifications = [
+    NotificationItem(
+      title: 'Welcome!',
+      message: 'Firebase notification are ready',
+      time: 'Just now',
+      icon: Icons.celebration,
+      color: Colors.green,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAnimations();
+    _loadFCMToken();
+    _setupNotificationListener();
+  }
+
+  void _setupAnimations() {
+    _pulseController = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    );
+    _slideController = AnimationController(
+      duration: Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.elasticOut),
+    );
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
+        );
+
+    _slideController.forward();
+  }
+
+  void _setupNotificationListener() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      setState(() {
+        _notificationCount++;
+        _recentNotifications.insert(
+          0,
+          NotificationItem(
+            title: message.notification?.title ?? "New Notification",
+            message: message.notification?.body ?? "You have a new message",
+            time: "Now",
+            icon: Icons.notifications_active,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        if (_recentNotifications.length > 5) {
+          _recentNotifications.removeLast();
+        }
+      });
+      _pulseController.forward().then((_) {
+        _pulseController.reverse();
+      });
     });
+  }
+
+  Future<void> _loadFCMToken() async {
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      setState(() {
+        _fcmToken = token ?? 'Unable to get token';
+      });
+    } catch (e) {
+      setState(() {
+        _fcmToken = 'Error loading token';
+      });
+    }
+  }
+
+  Future<void> _toggleSubscription() async {
+    try {
+      if (_isSubscribed) {
+        await FirebaseMessaging.instance.unsubscribeFromTopic('jong');
+      } else {
+        await FirebaseMessaging.instance.subscribeToTopic('jong');
+      }
+      setState(() {
+        _isSubscribed = !_isSubscribed;
+      });
+      _showSnackBar(
+        _isSubscribed
+            ? 'Subscribed to notifications!'
+            : 'Unsubscribed from notifications!',
+      );
+    } catch (e) {
+      _showSnackBar('Error: ${e.toString()}');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  void _copyTokenToClipboard() {
+    Clipboard.setData(ClipboardData(text: _fcmToken));
+    _showSnackBar('FCM Token copied to clipboard!');
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _slideController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final theme = Theme.of(context);
+    final colorSchema = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      backgroundColor: colorSchema.surface,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: colorSchema.surface,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Firebase Notifications',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colorSchema.onSurface,
+                ),
+              ),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorSchema.primary.withOpacity(0.1),
+                      colorSchema.secondary.withOpacity(0.1),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _pulseAnimation.value,
+                        child: Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: colorSchema.primary.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.notifications_active,
+                            size: 60,
+                            color: colorSchema.primary,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatsCard(
+                            'Total Notifications',
+                            _notificationCount.toString(),
+                            Icons.notifications,
+                            colorSchema.primary,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatsCard(
+                            'Subscription Status',
+                            _isSubscribed ? 'Active' : 'Inactive',
+                            _isSubscribed ? Icons.check_circle : Icons.cancel,
+                            _isSubscribed ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+
+                    _buildActionButton(
+                      'Toggle Subscription',
+                      _isSubscribed
+                          ? 'Tap to unsubscribe from notifications'
+                          : 'Tap to subscribe to notifications',
+                      _isSubscribed
+                          ? Icons.notifications_off
+                          : Icons.notifications_on,
+                      _toggleSubscription,
+                      _isSubscribed ? Colors.orange : Colors.green,
+                    ),
+                    SizedBox(height: 16),
+
+                    _buildActionButton(
+                      'Copy FCM Token',
+                      'Copy your Firebase Cloud Messaging token',
+                      Icons.copy,
+                      _copyTokenToClipboard,
+                      colorSchema.secondary,
+                    ),
+                    SizedBox(height: 24),
+
+                    _buildTokenCard(),
+                    SizedBox(height: 24),
+
+                    Text(
+                      'Recent Notifications',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorSchema.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+
+                    if (_recentNotifications.isEmpty)
+                      _buildEmptyState()
+                    else
+                      ..._recentNotifications.map(_buildNotificationTile),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    );
+  }
+
+  Widget _buildStatsCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: color.withOpacity(0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+
+  Widget _buildActionButton(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+    Color color,
+  ) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        contentPadding: EdgeInsets.all(16),
+        leading: Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildTokenCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.vpn_key,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'FCM Token',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                ),
+              ),
+              child: Text(
+                _fcmToken,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationTile(NotificationItem notification) {
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        contentPadding: EdgeInsets.all(12),
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: notification.color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(notification.icon, color: notification.color),
+        ),
+        title: Text(
+          notification.title,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 4),
+            Text(notification.message),
+            SizedBox(height: 4),
+            Text(
+              notification.time,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+        isThreeLine: true,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          children: [
+            Icon(
+              Icons.notifications_none,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No notifications yet',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'When you reveived notifications, they will appear here.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class NotificationItem {
+  final String title;
+  final String message;
+  final String time;
+  final IconData icon;
+  final Color color;
+
+  NotificationItem({
+    required this.title,
+    required this.message,
+    required this.time,
+    required this.icon,
+    required this.color,
+  });
 }

@@ -26,6 +26,9 @@ class NotificationService {
   static Future<void> initializedNotification() async {
     await _firebaseMessaging.requestPermission();
 
+    await FirebaseMessaging.instance.subscribeToTopic('jong');
+    debugPrint('Subscribed to topic');
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       await _showFlutterNotification(message);
     });
