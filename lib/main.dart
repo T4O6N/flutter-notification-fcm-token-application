@@ -1,98 +1,73 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-// ignore: depend_on_referenced_packages
-import 'package:http/http.dart' as http;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(home: GoogleAuthPage());
-  }
-}
-
-class GoogleAuthPage extends StatefulWidget {
-  const GoogleAuthPage({super.key});
-
-  @override
-  State<GoogleAuthPage> createState() => _GoogleAuthPageState();
-}
-
-class _GoogleAuthPageState extends State<GoogleAuthPage> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-    // Use your Google OAuth client ID for Android/iOS here if needed
-  );
-
-  String? _accessToken;
-  String? _refreshToken;
-
-  Future<void> _handleSignIn() async {
-    try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
-      if (account == null) {
-        debugPrint('User cancelled sign-in');
-        return;
-      }
-
-      final GoogleSignInAuthentication auth = await account.authentication;
-      final idToken = auth.idToken;
-
-      if (idToken == null) {
-        debugPrint('No ID token found');
-        return;
-      }
-
-      // Send token to your backend
-      final response = await http.post(
-        // Uri.parse('http://localhost:4000/api/v1/auth/google/token'),
-        Uri.parse(
-          'https://charming-primarily-crane.ngrok-free.app/api/v1/auth/google/token',
-        ),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'idToken': idToken}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _accessToken = data['access_token'];
-          _refreshToken = data['refresh_token'];
-        });
-        debugPrint('Access Token: $_accessToken');
-        debugPrint('Refresh Token: $_refreshToken');
-      } else {
-        debugPrint('Backend error: ${response.statusCode} - ${response.body}');
-      }
-    } catch (error) {
-      debugPrint('Sign in failed: $error');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Google Auth Test')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: _handleSignIn,
-              child: const Text('Sign in with Google'),
-            ),
-            if (_accessToken != null) ...[
-              const SizedBox(height: 20),
-              Text('Access Token: $_accessToken'),
-            ],
-          ],
-        ),
+    return ChangeNotifierProvider(
+      create: (context) => AuthProvider(),
+      child: MaterialApp(
+        title: 'Firebase Google Auth Test',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) => const HomeScreen(),
+        },
       ),
+    );
+  }
+}
+
+// Auth Wrapper เพื่อตรวจสอบสถานะการเข้าสู่ระบบ
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _AuthWrapperState createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().checkAuthStatus();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        if (authProvider.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (authProvider.isLoggedIn) {
+          return const HomeScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
     );
   }
 }

@@ -41,48 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB31ZJoGPl7UWlTgtcFJ4MtRY5y8PSHl2Y',
-    appId: '1:906015471708:web:a1e33f9ae72e2180ef8e99',
-    messagingSenderId: '906015471708',
-    projectId: 'jong-notification-local-adb77',
-    authDomain: 'jong-notification-local-adb77.firebaseapp.com',
-    storageBucket: 'jong-notification-local-adb77.firebasestorage.app',
-    measurementId: 'G-G5CW4TQ984',
+    apiKey: 'AIzaSyAEnxzVN78msCVCH-lEMqP37yBQr0BvylQ',
+    appId: '1:736785257639:web:c0da6b1d982121241cb782',
+    messagingSenderId: '736785257639',
+    projectId: 'jong-user-authentication',
+    authDomain: 'jong-user-authentication.firebaseapp.com',
+    storageBucket: 'jong-user-authentication.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCWq64CE2NLmcSny5euy_hMUtNPXbZRkGM',
-    appId: '1:906015471708:android:631b4f6a968909b5ef8e99',
-    messagingSenderId: '906015471708',
-    projectId: 'jong-notification-local-adb77',
-    storageBucket: 'jong-notification-local-adb77.firebasestorage.app',
+    apiKey: 'AIzaSyAV22s6MBQ-8lfrxDJxS8I20sWlgwK-Isw',
+    appId: '1:736785257639:android:b6f2075798b01e8a1cb782',
+    messagingSenderId: '736785257639',
+    projectId: 'jong-user-authentication',
+    storageBucket: 'jong-user-authentication.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDdrJjn2cSS3iajGrt-o9dPCtFDIpgOZ5Q',
-    appId: '1:906015471708:ios:7ed11dc2b9832a46ef8e99',
-    messagingSenderId: '906015471708',
-    projectId: 'jong-notification-local-adb77',
-    storageBucket: 'jong-notification-local-adb77.firebasestorage.app',
+    apiKey: 'AIzaSyBRRwWUVp9rcPTurwasxEByhenVAZeJ-Dg',
+    appId: '1:736785257639:ios:190cbfe4473218df1cb782',
+    messagingSenderId: '736785257639',
+    projectId: 'jong-user-authentication',
+    storageBucket: 'jong-user-authentication.firebasestorage.app',
     iosBundleId: 'com.example.notificationFcmToken',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDdrJjn2cSS3iajGrt-o9dPCtFDIpgOZ5Q',
-    appId: '1:906015471708:ios:7ed11dc2b9832a46ef8e99',
-    messagingSenderId: '906015471708',
-    projectId: 'jong-notification-local-adb77',
-    storageBucket: 'jong-notification-local-adb77.firebasestorage.app',
+    apiKey: 'AIzaSyBRRwWUVp9rcPTurwasxEByhenVAZeJ-Dg',
+    appId: '1:736785257639:ios:190cbfe4473218df1cb782',
+    messagingSenderId: '736785257639',
+    projectId: 'jong-user-authentication',
+    storageBucket: 'jong-user-authentication.firebasestorage.app',
     iosBundleId: 'com.example.notificationFcmToken',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyB31ZJoGPl7UWlTgtcFJ4MtRY5y8PSHl2Y',
-    appId: '1:906015471708:web:a4dfc682dc7b3da5ef8e99',
-    messagingSenderId: '906015471708',
-    projectId: 'jong-notification-local-adb77',
-    authDomain: 'jong-notification-local-adb77.firebaseapp.com',
-    storageBucket: 'jong-notification-local-adb77.firebasestorage.app',
-    measurementId: 'G-N7E3FEZXGQ',
+    apiKey: 'AIzaSyAEnxzVN78msCVCH-lEMqP37yBQr0BvylQ',
+    appId: '1:736785257639:web:3cca4d4c683cd0661cb782',
+    messagingSenderId: '736785257639',
+    projectId: 'jong-user-authentication',
+    authDomain: 'jong-user-authentication.firebaseapp.com',
+    storageBucket: 'jong-user-authentication.firebasestorage.app',
   );
+
 }

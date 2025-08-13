@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "906015471708",
-    "project_id": "jong-notification-local-adb77",
-    "storage_bucket": "jong-notification-local-adb77.firebasestorage.app"
+    "project_number": "736785257639",
+    "project_id": "jong-user-authentication",
+    "storage_bucket": "jong-user-authentication.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:906015471708:android:631b4f6a968909b5ef8e99",
+        "mobilesdk_app_id": "1:736785257639:android:b6f2075798b01e8a1cb782",
         "android_client_info": {
           "package_name": "com.example.notification_fcm_token"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "736785257639-6fl6tsfr75qpurnj2coakj05btbgrbsu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.notification_fcm_token",
+            "certificate_hash": "6c44ff8e837b6d3925c9578a888ed88bbbcb15dc"
+          }
+        },
+        {
+          "client_id": "736785257639-l9uqumdh84kfonlh99jsp3ljk122eu2m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCWq64CE2NLmcSny5euy_hMUtNPXbZRkGM"
+          "current_key": "AIzaSyAV22s6MBQ-8lfrxDJxS8I20sWlgwK-Isw"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "736785257639-l9uqumdh84kfonlh99jsp3ljk122eu2m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "736785257639-22rtjag9c2v7rtjhh3qmnp50msqhe876.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.notificationFcmToken"
+              }
+            }
+          ]
         }
       }
     }

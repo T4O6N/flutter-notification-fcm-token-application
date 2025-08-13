@@ -7,7 +7,8 @@ import 'dart:convert';
 import '../models/auth_response.dart';
 
 class AuthService {
-  static const String baseUrl = 'https://localhost:4000';
+  static const String baseUrl =
+      'https://charming-primarily-crane.ngrok-free.app/api';
 
   final firebase_auth.FirebaseAuth _firebaseAuth =
       firebase_auth.FirebaseAuth.instance;
@@ -62,7 +63,7 @@ class AuthService {
   Future<AuthResponse> _sendTokenToBackend(String idToken) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/auth/google/signin'),
+        Uri.parse('$baseUrl/v1/auth/google/signin'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'idToken': idToken}),
       );

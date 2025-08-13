@@ -56,10 +56,7 @@ class LoginScreen extends StatelessWidget {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Image.asset(
-                            'assets/google_logo.png', // เพิ่มโลโก้ Google
-                            height: 20,
-                          ),
+                        : const Icon(Icons.account_circle, size: 20),
                     label: Text(
                       authProvider.isLoading
                           ? 'กำลังเข้าสู่ระบบ...'
